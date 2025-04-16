@@ -92,15 +92,21 @@ class PredictionResult:
 
         self.prediction.avg_char_probability = 0
 
-        for p in self.prediction.positions:
+        #self.prediction.positions.sort(key=lambda p: p.local_start)
+        for i, p in enumerate(self.prediction.positions):
             for c in p.chars:
                 c.char = codec.code2char[c.label]
-
+            
             p.global_start = int(out_to_in_trans(p.local_start))
-            p.global_end = int(out_to_in_trans(p.local_end))
+            if i < len(self.prediction.positions) - 1:
+                p.global_end = int(out_to_in_trans(self.prediction.positions[i + 1].local_start))
+            else:
+                p.global_end = int(out_to_in_trans(p.local_end + 1))
+
             if len(p.chars) > 0:
                 self.prediction.avg_char_probability += p.chars[0].probability
 
         self.prediction.avg_char_probability /= (
             len(self.prediction.positions) if len(self.prediction.positions) > 0 else 1
         )
+        
